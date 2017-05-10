@@ -62,8 +62,21 @@ static bool open_config(const char *path, FILE **f) {
 	return *f != NULL;
 }
 
-static void set_color(const char *key, const char *value) {
+static void set_color(struct scurvy_config *config,
+		const char *key, const char *value) {
 	VTermState *state = vterm_obtain_state(vterm);
+	VTermColor fg, bg;
+	vterm_state_get_default_colors(state, &fg, &bg);
+	uint32_t color;
+	if (!color_parse(value, &color)) {
+		scurvy_log(L_ERROR, "Invalid color specification '%s'", value);
+		return;
+	}
+	VTermColor col = {
+		color >> 8 & 0xFF,
+		color >> 16 & 0xFF,
+		color >> 24 & 0xFF,
+	};
 	if (strncmp(key, "color", 5) == 0) {
 		char *end;
 		int index = strtol(key + 5, &end, 10);
@@ -71,17 +84,17 @@ static void set_color(const char *key, const char *value) {
 			scurvy_log(L_ERROR, "Invalid color configuration '%s'", key);
 			return;
 		}
-		uint32_t color;
-		if (!color_parse(value, &color)) {
-			scurvy_log(L_ERROR, "Invalid color specification '%s'", value);
-			return;
-		}
-		VTermColor col = {
-			color >> 8 & 0xFF,
-			color >> 16 & 0xFF,
-			color >> 24 & 0xFF,
-		};
 		vterm_state_set_palette_color(state, index, &col);
+		scurvy_log(L_DEBUG, "Set color%d to %08X", index, color);
+	} else if (strcmp(key, "foreground") == 0) {
+		vterm_state_set_default_colors(state, &col, &bg);
+		scurvy_log(L_DEBUG, "Set foreground to %08X", color);
+	} else if (strcmp(key, "background") == 0) {
+		vterm_state_set_default_colors(state, &fg, &col);
+		config->background = color;
+		scurvy_log(L_DEBUG, "Set background to %08X", color);
+	} else {
+		scurvy_log(L_ERROR, "Invalid color configuration '%s'", key);
 	}
 }
 
@@ -95,7 +108,7 @@ int handle_config_option(void *_config, const char *section,
 	};
 
 	if (strcmp(section, "colors") == 0) {
-		set_color(key, value);
+		set_color(config, key, value);
 		return 1;
 	}
 

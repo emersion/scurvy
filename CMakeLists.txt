@@ -25,7 +25,11 @@ find_package(Cairo REQUIRED)
 find_package(Pango REQUIRED)
 
 add_subdirectory(src/wayland)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${PANGO_INCLUDE_DIRS}
+    ${CAIRO_INCLUDE_DIRS}
+)
 
 add_executable(scurvy
     src/main.c
@@ -33,6 +37,9 @@ add_executable(scurvy
     src/colors.c
     src/config.c
     src/log.c
+    src/pango.c
+    src/child.c
+    src/term.c
 )
 
 target_link_libraries(scurvy

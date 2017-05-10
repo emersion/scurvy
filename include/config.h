@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 struct scurvy_config {
+	uint32_t background;
 	char *font;
 	char *url;
 	char *term;
