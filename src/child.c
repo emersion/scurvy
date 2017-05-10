@@ -110,21 +110,28 @@ struct scurvy_child *child_spawn(char **argv) {
 	return child;
 }
 
+// TODO: support partial read/write correctly
 bool child_read_pty(struct scurvy_child *child) {
 	static char buf[4096];
 	int r = read(child->fd, &buf, sizeof(buf));
 	if (r == -1) {
 		if (errno != EAGAIN) {
-			scurvy_log(L_DEBUG, "pty read error %d", errno);
-			// TODO: Abort
-			return false;
+			scurvy_log(L_ERROR, "pty read error %d", errno);
+			exit(1);
 		}
 	}
 	if (r > 0) {
-		//vterm_input_write(vterm, buf, r);
+		vterm_input_write(vterm, buf, r);
+		vterm_screen_flush_damage(vtscreen);
 		return true;
 	}
 	return false;
+}
+
+void child_write_pty(struct scurvy_child *child) {
+	static char buf[4096];
+	int r = vterm_output_read(vterm, buf, sizeof(buf));
+	write(child->fd, &buf, r);
 }
 
 void child_free(struct scurvy_child *child) {

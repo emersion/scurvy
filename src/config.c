@@ -64,9 +64,8 @@ static bool open_config(const char *path, FILE **f) {
 
 static void set_color(struct scurvy_config *config,
 		const char *key, const char *value) {
-	VTermState *state = vterm_obtain_state(vterm);
 	VTermColor fg, bg;
-	vterm_state_get_default_colors(state, &fg, &bg);
+	vterm_state_get_default_colors(vtstate, &fg, &bg);
 	uint32_t color;
 	if (!color_parse(value, &color)) {
 		scurvy_log(L_ERROR, "Invalid color specification '%s'", value);
@@ -84,13 +83,13 @@ static void set_color(struct scurvy_config *config,
 			scurvy_log(L_ERROR, "Invalid color configuration '%s'", key);
 			return;
 		}
-		vterm_state_set_palette_color(state, index, &col);
+		vterm_state_set_palette_color(vtstate, index, &col);
 		scurvy_log(L_DEBUG, "Set color%d to %08X", index, color);
 	} else if (strcmp(key, "foreground") == 0) {
-		vterm_state_set_default_colors(state, &col, &bg);
+		vterm_state_set_default_colors(vtstate, &col, &bg);
 		scurvy_log(L_DEBUG, "Set foreground to %08X", color);
 	} else if (strcmp(key, "background") == 0) {
-		vterm_state_set_default_colors(state, &fg, &col);
+		vterm_state_set_default_colors(vtstate, &fg, &col);
 		config->background = color;
 		scurvy_log(L_DEBUG, "Set background to %08X", color);
 	} else {

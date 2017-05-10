@@ -8,6 +8,7 @@ struct scurvy_config {
 	char *font;
 	char *url;
 	char *term;
+	int font_width, font_height;
 };
 
 extern struct scurvy_config *config;

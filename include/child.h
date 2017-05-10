@@ -10,5 +10,6 @@ struct scurvy_child {
 struct scurvy_child *child_spawn(char **argv);
 void child_free(struct scurvy_child *child);
 bool child_read_pty(struct scurvy_child *child);
+void child_write_pty(struct scurvy_child *child);
 
 #endif
