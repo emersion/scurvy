@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 	if (!load_scurvy_config(NULL)) {
 		return 1;
 	}
-	char *_argv[] = { "/usr/bin/vim", NULL };
+	char *_argv[] = { "/usr/bin/sh", "-c", "vim ~/.config/scurvy.conf", NULL };
 	struct scurvy_child *child = child_spawn(_argv);
 	int status = wayland_main(child);
 	child_free(child);

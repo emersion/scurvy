@@ -59,17 +59,21 @@ void term_init() {
 	vtscreen = vterm_obtain_screen(vterm);
 
 	vterm_set_utf8(vterm, 1);
-	vterm_screen_set_damage_merge(vtscreen, VTERM_DAMAGE_SCROLL);
+	vterm_screen_set_damage_merge(vtscreen, VTERM_DAMAGE_CELL);
 	vterm_screen_reset(vtscreen, 1);
 	vterm_state_set_bold_highbright(vtstate, true);
 }
 
 void set_term_size(cairo_t *cairo, int width, int height) {
-	int w, h;
-	get_text_size(cairo, config->font, &w, &h, 1, false, "H");
-	h = height / h;
-	w = width / w;
-	scurvy_log(L_DEBUG, "Setting size to %d rows %d cols", h, w);
-	vterm_set_size(vterm, h, w);
-	vterm_screen_flush_damage(vtscreen);
+	int rows, cols;
+	get_text_size(cairo, config->font, &cols, &rows, 1, false, "H");
+	rows = height / rows;
+	cols = width / cols;
+	int old_rows, old_cols;
+	vterm_get_size(vterm, &old_rows, &old_cols);
+	if ((rows && cols) && (old_rows != rows || old_cols != cols)) {
+		scurvy_log(L_DEBUG, "Setting size to %d rows %d cols", rows, cols);
+		vterm_set_size(vterm, rows, cols);
+		vterm_screen_flush_damage(vtscreen);
+	}
 }
