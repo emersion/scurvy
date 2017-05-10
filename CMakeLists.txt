@@ -40,6 +40,7 @@ add_executable(scurvy
     src/pango.c
     src/child.c
     src/term.c
+    src/utf8.c
 )
 
 target_link_libraries(scurvy

@@ -1,6 +1,7 @@
 #include <cairo/cairo.h>
 #include <vterm.h>
 #include <string.h>
+#include "unicode.h"
 #include "term.h"
 #include "pango.h"
 #include "config.h"
@@ -25,15 +26,18 @@ void term_render(cairo_t *cairo) {
 	int rows, cols;
 	vterm_get_size(vterm, &rows, &cols);
 	VTermScreenCell cell;
-	char buf[VTERM_MAX_CHARS_PER_CELL + 1];
+	char buf[VTERM_MAX_CHARS_PER_CELL * 4 + 1];
 	int tw, th, _;
 	get_text_size(cairo, config->font, &tw, &th, 1, false, "Hello world");
 	for (int row = 0; row < rows; ++row) {
 		for (int col = 0, x = 0; col < cols; ++col) {
 			VTermPos pos = { row, col };
 			vterm_screen_get_cell(vtscreen, pos, &cell);
-			memcpy(buf, cell.chars, VTERM_MAX_CHARS_PER_CELL);
-			buf[(int)cell.width] = '\0';
+			size_t s = 0;
+			for (size_t i = 0; cell.chars[i]; ++i) {
+				s += utf8_encode(&buf[s], cell.chars[i]);
+			}
+			buf[s] = '\0';
 
 			get_text_size(cairo, config->font, &tw, &_, 1, false, "%s", buf);
 			cairo_set_source_rgb(cairo,
@@ -49,6 +53,9 @@ void term_render(cairo_t *cairo) {
 					cell.fg.blue / 256.0);
 			pango_printf(cairo, config->font, 1, false, "%s", buf);
 			x += tw;
+			if (cell.width != 1) {
+				col += cell.width - 1;
+			}
 		}
 	}
 }
