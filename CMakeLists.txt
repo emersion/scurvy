@@ -20,6 +20,7 @@ list(INSERT CMAKE_MODULE_PATH 0
 	${CMAKE_CURRENT_SOURCE_DIR}/CMake
 )
 
+find_package(Libvterm REQUIRED)
 find_package(Cairo REQUIRED)
 find_package(Pango REQUIRED)
 
@@ -30,8 +31,11 @@ add_executable(scurvy
     src/main.c
     src/ini.c
     src/colors.c
+    src/config.c
+    src/log.c
 )
 
 target_link_libraries(scurvy
     scurvy-wayland
+    ${LIBVTERM_LIBRARIES}
 )

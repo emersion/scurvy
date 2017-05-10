@@ -177,30 +177,33 @@ static bool get_named_color(const char *name, uint32_t *color) {
 
 static bool parse_hex_color(const char *str, uint32_t *val) {
 	int len = strlen(str);
-	if (len != 7 && len != 9) {
-		return false;
-	}
 	char *end;
 	*val = strtoul(str + 1, &end, 16);
 	if (*end) {
 		return false;
 	}
-	if (len == 7) {
+	if (len == 9) { // #RRGGBBAA
+		return true;
+	} else if (len == 7) { // #RRGGBB
 		*val = (*val << 8) | 0xFF;
+		return true;
+	} else if (len == 4) { // #RGB
+		*val = ((*val & 0xF) | (*val & 0xF) << 4)
+			| ((*val & 0xF0) | (*val & 0xF0) << 4) << 4
+			| ((*val & 0xF00) | (*val & 0xF00) << 4) << 8;
+		*val = (*val << 8) | 0xFF;
+		return true;
+	} else if (len == 5) { // #RGBA
+		*val = ((*val & 0xF) | (*val & 0xF) << 4)
+			| ((*val & 0xF0) | (*val & 0xF0) << 4) << 4
+			| ((*val & 0xF00) | (*val & 0xF00) << 4) << 8
+			| ((*val & 0xF000) | (*val & 0xF000) << 4) << 12;
 	}
-	return true;
+	return false;
 }
 
 bool color_parse(const char *str, uint32_t *val) {
-	if (strncmp(str, "rgba(", 5) == 0) {
-		return false; // TODO
-	} else if (strncmp(str, "rgb(", 4) == 0) {
-		return false; // TODO
-	} else if (strncmp(str, "hsla(", 5) == 0) {
-		return false; // TODO
-	} else if (strncmp(str, "hsl(", 4) == 0) {
-		return false; // TODO
-	} else if (*str == '#') {
+	if (*str == '#') {
 		return parse_hex_color(str, val);
 	}
 	return get_named_color(str, val);
