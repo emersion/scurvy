@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 struct scurvy_config {
+	struct scurvy_vterm *vterm;
 	uint32_t background;
 	char *font;
 	char *url;
@@ -13,6 +14,6 @@ struct scurvy_config {
 
 extern struct scurvy_config *config;
 
-bool load_scurvy_config(const char *file);
+bool load_scurvy_config(struct scurvy_vterm *term, const char *file);
 
 #endif

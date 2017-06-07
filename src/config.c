@@ -65,7 +65,7 @@ static bool open_config(const char *path, FILE **f) {
 static void set_color(struct scurvy_config *config,
 		const char *key, const char *value) {
 	VTermColor fg, bg;
-	vterm_state_get_default_colors(vtstate, &fg, &bg);
+	vterm_state_get_default_colors(config->vterm->vtstate, &fg, &bg);
 	uint32_t color;
 	if (!color_parse(value, &color)) {
 		scurvy_log(L_ERROR, "Invalid color specification '%s'", value);
@@ -83,13 +83,13 @@ static void set_color(struct scurvy_config *config,
 			scurvy_log(L_ERROR, "Invalid color configuration '%s'", key);
 			return;
 		}
-		vterm_state_set_palette_color(vtstate, index, &col);
+		vterm_state_set_palette_color(config->vterm->vtstate, index, &col);
 		scurvy_log(L_DEBUG, "Set color%d to %08X", index, color);
 	} else if (strcmp(key, "foreground") == 0) {
-		vterm_state_set_default_colors(vtstate, &col, &bg);
+		vterm_state_set_default_colors(config->vterm->vtstate, &col, &bg);
 		scurvy_log(L_DEBUG, "Set foreground to %08X", color);
 	} else if (strcmp(key, "background") == 0) {
-		vterm_state_set_default_colors(vtstate, &fg, &col);
+		vterm_state_set_default_colors(config->vterm->vtstate, &fg, &col);
 		config->background = color;
 		scurvy_log(L_DEBUG, "Set background to %08X", color);
 	} else {
@@ -124,7 +124,8 @@ int handle_config_option(void *_config, const char *section,
 	return 1;
 }
 
-static bool load_config(const char *path, struct scurvy_config *config) {
+static bool load_config(const char *path, struct scurvy_vterm *term,
+		struct scurvy_config *config) {
 	FILE *f;
 	if (!open_config(path, &f)) {
 		scurvy_log(L_ERROR, "Unable to open %s for reading", path);
@@ -132,6 +133,7 @@ static bool load_config(const char *path, struct scurvy_config *config) {
 	}
 
 	scurvy_log(L_DEBUG, "Loading config from %s", path);
+	config->vterm = term;
 
 	int ini = ini_parse_file(f, handle_config_option, config);
 	if (ini != 0) {
@@ -154,7 +156,7 @@ void free_config(struct scurvy_config *config) {
 	free(config->term);
 }
 
-bool load_scurvy_config(const char *file) {
+bool load_scurvy_config(struct scurvy_vterm *term, const char *file) {
 	static const char *config_paths[] = {
 		"$XDG_CONFIG_HOME/scurvy.conf",
 	};
@@ -171,7 +173,7 @@ bool load_scurvy_config(const char *file) {
 
 	config_defaults(config);
 
-	bool success = load_config(path, config);
+	bool success = load_config(path, term, config);
 
 	if (old_config) {
 		free_config(old_config);

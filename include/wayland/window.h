@@ -6,6 +6,7 @@
 #include <pango/pangocairo.h>
 #include <stdbool.h>
 #include "wayland/registry.h"
+#include "term.h"
 
 struct window;
 
@@ -50,6 +51,7 @@ struct window {
 	struct wl_shell_surface *shell_surface;
 	struct wl_callback *frame_cb;
 	struct cursor cursor;
+	struct scurvy_vterm *term;
 	uint32_t width, height;
 	int32_t scale;
 	char *font;

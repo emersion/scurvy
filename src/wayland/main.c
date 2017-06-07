@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <xkbcommon/xkbcommon.h>
 #include <wayland-client.h>
 #include <cairo/cairo.h>
@@ -6,15 +7,13 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <time.h>
 #include "wayland/window.h"
 #include "wayland/registry.h"
 #include "config.h"
 #include "child.h"
 #include "term.h"
 #include "log.h"
-
-struct registry *registry;
-struct window *win;
 
 static int term_damage(VTermRect rect, void *data) {
 	return 0;
@@ -64,8 +63,8 @@ static VTermScreenCallbacks vterm_screen_callbacks = {
 	.resize = term_resize
 };
 
-static void window_resize(struct window *_win) {
-	set_term_size(win->cairo, win->width, win->height);
+static void window_resize(struct window *win) {
+	set_term_size(win->term, win->cairo, win->width, win->height);
 }
 
 static void keyboard_event(enum wl_keyboard_key_state state,
@@ -73,20 +72,23 @@ static void keyboard_event(enum wl_keyboard_key_state state,
 	// TODO
 }
 
-int wayland_main(struct scurvy_child *child) {
-	vterm_screen_set_callbacks(vtscreen, &vterm_screen_callbacks, child);
-	registry = registry_poll();
+int wayland_main(struct scurvy_vterm *term, struct scurvy_child *child) {
+	vterm_screen_set_callbacks(term->vtscreen, &vterm_screen_callbacks, child);
+	struct registry *registry = registry_poll();
 	registry->input->notify = keyboard_event;
-	win = window_setup(registry, 640, 480, 1, true);
+	struct window *win = window_setup(registry, 640, 480, 1, true);
+	win->term = term;
 	win->notify_resize = window_resize;
 	while (wl_display_dispatch(registry->display) != -1) {
 		if (window_prerender(win) && win->cairo) {
 			child_read_pty(child);
 			child_write_pty(child);
-			term_render(win->cairo);
+			term_render(term, win->cairo);
 			window_render(win);
 			wl_display_flush(registry->display);
 		}
+		struct timespec spec = { 0, .5e+8 };
+		nanosleep(&spec, NULL);
 	}
 	window_teardown(win);
 	registry_teardown(registry);

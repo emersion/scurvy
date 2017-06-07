@@ -95,11 +95,12 @@ static void init_child(struct scurvy_child *child, char **argv) {
 	exit(1);
 }
 
-struct scurvy_child *child_spawn(char **argv) {
+struct scurvy_child *child_spawn(struct scurvy_vterm *term, char **argv) {
 	struct scurvy_child *child = calloc(sizeof(struct scurvy_child), 1);
 	if (!child) {
 		return NULL;
 	}
+	child->term = term;
 	child->fd = posix_openpt(O_RDWR | O_NOCTTY | O_CLOEXEC | O_NONBLOCK);
 	child->pid = fork();
 	if (child->pid < 0) {
@@ -121,8 +122,8 @@ bool child_read_pty(struct scurvy_child *child) {
 		}
 	}
 	if (r > 0) {
-		vterm_input_write(vterm, buf, r);
-		vterm_screen_flush_damage(vtscreen);
+		vterm_input_write(child->term->vterm, buf, r);
+		vterm_screen_flush_damage(child->term->vtscreen);
 		return true;
 	}
 	return false;
@@ -130,7 +131,7 @@ bool child_read_pty(struct scurvy_child *child) {
 
 void child_write_pty(struct scurvy_child *child) {
 	static char buf[4096];
-	int r = vterm_output_read(vterm, buf, sizeof(buf));
+	int r = vterm_output_read(child->term->vterm, buf, sizeof(buf));
 	write(child->fd, &buf, r);
 }
 
