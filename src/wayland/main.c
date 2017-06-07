@@ -80,7 +80,11 @@ int wayland_main(struct scurvy_vterm *term, struct scurvy_child *child) {
 	win->term = term;
 	win->notify_resize = window_resize;
 	while (wl_display_dispatch(registry->display) != -1) {
+		struct buffer *old_buffer = win->buffer;
 		if (window_prerender(win) && win->cairo) {
+			if (old_buffer != win->buffer) {
+				vterm_screen_flush_damage(term->vtscreen);
+			}
 			child_read_pty(child);
 			child_write_pty(child);
 			term_render(term, win->cairo);
