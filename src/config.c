@@ -165,13 +165,13 @@ bool load_scurvy_config(struct scurvy_vterm *term, const char *file) {
 	if (file != NULL) {
 		path = strdup(file);
 	} else {
-		path = get_config_path(config_paths, 3);
+		path = get_config_path(config_paths, 1);
 	}
 
 	struct scurvy_config *old_config = config;
 	config = calloc(1, sizeof(struct scurvy_config));
 
-	config_defaults(config);
+	config_defaults();
 
 	bool success = load_config(path, term, config);
 

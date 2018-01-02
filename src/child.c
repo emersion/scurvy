@@ -26,6 +26,8 @@
 #include "log.h"
 #include "child.h"
 
+#define SIGUNUSED 31
+
 static void init_child_pty(struct scurvy_child *child) {
 	if (grantpt(child->fd) < 0) {
 		close(child->fd);
