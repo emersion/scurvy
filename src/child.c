@@ -6,8 +6,6 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <string.h>
-#include <libtsm.h>
-#include <termbox.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <errno.h>
